@@ -2,25 +2,38 @@ import csv
 import io
 
 
-def invoices(db, status='all'):
+def invoices(db, status='all', customer_id=None):
     if status not in ('all', 'open', 'paid'):
         raise ValueError('status must be all, open or paid')
-    data = db.execute('''
+
+    query = '''
         SELECT i.id, i.customer_id, c.name AS customer_name, i.invoice_number,
                i.amount, i.due_date, COALESCE(SUM(p.amount), 0) AS paid
         FROM invoices i JOIN customers c ON c.customer_id=i.customer_id
         LEFT JOIN payments p ON p.invoice_id=i.id
-        GROUP BY i.id ORDER BY i.id
-    ''').fetchall()
+    '''
+    params = []
+    if customer_id:
+        query += ' WHERE i.customer_id = ? '
+        params.append(customer_id)
+
+    query += ' GROUP BY i.id ORDER BY i.id'
+
+    data = db.execute(query, params).fetchall()
     result = []
     for row in data:
         item = dict(row)
-        item['balance'] = item['amount'] - item['paid']
-        item['status'] = 'paid' if round(item['balance'], 2) <= 0 else 'open'
+        item['amount'] = round(item['amount'], 2)
+        item['paid'] = round(item['paid'], 2)
+        item['balance'] = round(item['amount'] - item['paid'], 2)
+        item['status'] = 'paid' if item['balance'] <= 0 else 'open'
         result.append(item)
-    if status != 'all':
-        requested = {'open': 'paid', 'paid': 'paid'}[status]
-        result = [r for r in result if r['status'] == requested]
+
+    if status == 'open':
+        result = [r for r in result if r['status'] == 'open']
+    elif status == 'paid':
+        result = [r for r in result if r['status'] == 'paid']
+
     return result
 
 
@@ -28,6 +41,8 @@ def overview(db):
     rows = invoices(db)
     unmatched = [dict(r) for r in db.execute('''SELECT payment_id, customer_id,
         invoice_number, amount FROM payments WHERE invoice_id IS NULL ORDER BY payment_id''')]
+    for u in unmatched:
+        u['amount'] = round(u['amount'], 2)
     return {'invoices': rows, 'unmatched_payments': unmatched, 'summary': {
         'invoice_count': len(rows),
         'open_count': sum(r['status'] == 'open' for r in rows),
@@ -35,14 +50,14 @@ def overview(db):
     }}
 
 
-def export_csv(db):
+def export_csv(db, status='all', customer_id=None):
     output = io.StringIO(newline='')
     fields = ['customer_id', 'invoice_number', 'amount', 'paid', 'balance', 'status']
     writer = csv.DictWriter(output, fieldnames=fields)
     writer.writeheader()
-    for row in invoices(db):
+    for row in invoices(db, status=status, customer_id=customer_id):
         item = {k: row[k] for k in fields}
         for key in ('amount', 'paid', 'balance'):
-            item[key] = f"{int(item[key] * 100) / 100:.2f}"
+            item[key] = f"{row[key]:.2f}"
         writer.writerow(item)
     return output.getvalue()

@@ -9,7 +9,20 @@ const text = (tag, value, className = '') => {
 
 async function refresh() {
   const status = document.querySelector('#status').value;
-  const responses = await Promise.all([fetch('/api/overview'), fetch(`/api/invoices?status=${status}`)]);
+  const customerElem = document.querySelector('#customer');
+  const customerId = customerElem ? customerElem.value : '';
+  let url = `/api/invoices?status=${status}`;
+  let exportUrl = `/api/export?status=${status}`;
+  if (customerId) {
+    url += `&customer_id=${encodeURIComponent(customerId)}`;
+    exportUrl += `&customer_id=${encodeURIComponent(customerId)}`;
+  }
+  const exportBtn = document.querySelector('#export-btn');
+  if (exportBtn) {
+    exportBtn.href = exportUrl;
+  }
+
+  const responses = await Promise.all([fetch('/api/overview'), fetch(url)]);
   if (responses.some(r => !r.ok)) throw new Error('Could not refresh the register.');
   const [data, rows] = await Promise.all(responses.map(r => r.json()));
   document.querySelector('#invoice-count').textContent = data.summary.invoice_count;
@@ -33,14 +46,28 @@ async function refresh() {
 async function submitImport(form) {
   const feedback = form.querySelector('.feedback');
   const button = form.querySelector('button');
+  const fileInput = form.querySelector('input');
+  if (!fileInput.files.length) {
+    feedback.textContent = 'Please select a CSV file.';
+    return;
+  }
   button.disabled = true;
   feedback.textContent = 'Importing…';
   try {
-    const csv = await form.querySelector('input').files[0].text();
-    await fetch(`/api/import?kind=${form.dataset.kind}`, {
+    const csv = await fileInput.files[0].text();
+    const res = await fetch(`/api/import?kind=${form.dataset.kind}`, {
       method: 'POST', headers: { 'Content-Type': 'text/csv' }, body: csv
     });
-    feedback.textContent = 'Import complete. Your records are ready.';
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Import failed');
+    }
+    let msg = `Import complete: ${data.imported} imported, ${data.skipped} skipped, ${data.rejected} rejected.`;
+    if (data.errors && data.errors.length) {
+      const errList = data.errors.map(e => `Line ${e.line}: ${e.reason}`).join(' | ');
+      msg += ` Errors: ${errList}`;
+    }
+    feedback.textContent = msg;
     await refresh();
   } catch (error) {
     feedback.textContent = `Import failed: ${error.message}`;
@@ -50,5 +77,9 @@ async function submitImport(form) {
 }
 
 document.querySelector('#status').addEventListener('change', () => refresh().catch(e => { document.querySelector('#page-error').textContent = e.message; }));
+const custElem = document.querySelector('#customer');
+if (custElem) {
+  custElem.addEventListener('change', () => refresh().catch(e => { document.querySelector('#page-error').textContent = e.message; }));
+}
 document.querySelectorAll('form[data-kind]').forEach(form => form.addEventListener('submit', e => { e.preventDefault(); submitImport(form); }));
 refresh().catch(e => { document.querySelector('#page-error').textContent = e.message; });

@@ -33,10 +33,15 @@ def make_server(db_path, web_dir, port):
                 if url.path == '/api/overview':
                     return self.send(200, reporting.overview(db))
                 if url.path == '/api/invoices':
-                    status = parse_qs(url.query).get('status', ['all'])[0]
-                    return self.send(200, reporting.invoices(db, status))
+                    query = parse_qs(url.query)
+                    status = query.get('status', ['all'])[0]
+                    customer_id = query.get('customer_id', [''])[0] or None
+                    return self.send(200, reporting.invoices(db, status=status, customer_id=customer_id))
                 if url.path == '/api/export':
-                    return self.send(200, reporting.export_csv(db), 'text/csv; charset=utf-8')
+                    query = parse_qs(url.query)
+                    status = query.get('status', ['all'])[0]
+                    customer_id = query.get('customer_id', [''])[0] or None
+                    return self.send(200, reporting.export_csv(db, status=status, customer_id=customer_id), 'text/csv; charset=utf-8')
                 return self.send(404, {'error': 'Not found'})
             except ValueError as exc:
                 self.send(400, {'error': str(exc)})
