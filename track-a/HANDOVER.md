@@ -1,7 +1,7 @@
 # Handover
 
-- Name: Jules
-- Email used for this application: applicant@example.com
+- Name: Saksham Shekher
+- Email used for this application: omeepd009@gmail.com
 - Chosen track: Track A (Repair the register)
 - Why this track: I selected Track A because auditing, diagnosing, and repairing a real product engineering codebase with data integrity and financial accuracy constraints closely matches core product engineering work.
 - Approximate total time, including setup and handover: 2 hours 15 minutes
@@ -29,7 +29,7 @@ Investigated and resolved all 6 core defects in ClearLedger while strictly prese
 
 1. **Payment Matching (`ledger/matching.py`)**: Fixed `find_invoice` which previously matched payments by amount alone before checking exact customer/invoice identity. It now matches strictly on exact `(customer_id, invoice_number)`.
 2. **Re-import Deduplication (`ledger/storage.py`)**: Updated `insert_invoice` and `insert_payment` to skip identical re-imports without modifying totals, and reject reused keys/IDs with conflicting details.
-3. **Status Filter (`ledger/reporting.py`)**: Fixed `invoices()` where `status='open'` was returning paid invoices instead of open invoices due to a inverted mapping dict.
+3. **Status Filter (`ledger/reporting.py`)**: Fixed `invoices()` where `status='open'` was returning paid invoices instead of open invoices due to an inverted mapping dict.
 4. **CSV Export Precision (`ledger/reporting.py`)**: Replaced `int(val * 100) / 100` float truncation with exact two-decimal string formatting (`f"{val:.2f}"`), eliminating rounding errors (e.g., `19.99` exported as `19.98`).
 5. **Row-Level Error Isolation (`ledger/importing.py`)**: Refactored `import_csv()` loop to process each CSV row independently. Bad data rows increment `rejected` count and log line numbers/reasons without aborting valid rows.
 6. **Browser Feedback (`web/app.js`)**: Updated `submitImport` to parse JSON API responses, display imported/skipped/rejected counts, and list line-by-line error messages on the UI.
