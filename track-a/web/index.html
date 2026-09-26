@@ -10,7 +10,7 @@
 <article><span>Outstanding</span><strong id="outstanding">—</strong></article>
 </section>
 <section class="card">
-<div class="heading"><div><h2>Invoice register</h2><p>Review balances before sharing an export.</p></div><div class="actions"><label>Show <select id="status"><option value="all">All invoices</option><option value="open">Open invoices</option><option value="paid">Paid invoices</option></select></label><a class="button" href="/api/export" download="invoice-balances.csv">Export CSV</a></div></div>
+<div class="heading"><div><h2>Invoice register</h2><p>Review balances before sharing an export.</p></div><div class="actions"><label>Customer <select id="customer"><option value="">All customers</option><option value="HARBOR">Harbor Design (HARBOR)</option><option value="MAPLE">Maple Studio (MAPLE)</option><option value="NORTH">North Workshop (NORTH)</option></select></label><label>Show <select id="status"><option value="all">All invoices</option><option value="open">Open invoices</option><option value="paid">Paid invoices</option></select></label><a class="button" id="export-btn" href="/api/export" download="invoice-balances.csv">Export CSV</a></div></div>
 <div class="table-wrap"><table><thead><tr><th>Customer</th><th>Invoice</th><th>Due</th><th class="number">Amount</th><th class="number">Paid</th><th class="number">Balance</th><th>Status</th></tr></thead><tbody id="invoices"></tbody></table></div>
 </section>
 <section class="imports">
