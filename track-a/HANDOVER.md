@@ -47,11 +47,11 @@ Added **Customer Filtering** (`customer_id`) to `GET /api/invoices`, `GET /api/e
 
 ## Tool-Use Summary & Judgment
 
-- **Tools Used**: Jules AI assistant (Gemini 3.8 Flash model), Python `unittest` framework, SQLite3 CLI/runtime.
+- **Tools Used**: Gemini (Gemini 3.8 Flash model), Python `unittest` framework, SQLite3 CLI/runtime.
 - **Purpose**:
-  - **Jules AI Assistant**: Used for static code inspection across `ledger/` modules, identifying edge cases, drafting bug fixes, and writing handover documentation.
+  - **Gemini (Gemini 3.8 Flash)**: Used for static code inspection across `ledger/` modules, identifying edge cases, drafting bug fixes, and writing handover documentation.
   - **Python `unittest` & Custom Scripts**: Used to run automated smoke tests and verify database state against `fixtures/expected-records.json`.
 - **Verification, Correction & Decision Example**:
-  - *Suggestion*: The AI assistant initially suggested adding a `UNIQUE(customer_id, invoice_number)` SQL constraint to the SQLite schema for invoice deduplication.
+  - *Suggestion*: Gemini initially suggested adding a `UNIQUE(customer_id, invoice_number)` SQL constraint to the SQLite schema for invoice deduplication.
   - *My Decision/Correction*: I rejected adding database schema constraints because doing so would risk incompatibility or require migration steps when loading the existing fixture file (`fixtures/existing-register.sqlite3`). Instead, I implemented deduplication explicitly in `insert_invoice` using application logic (`invoice_by_key`), ensuring 100% schema compatibility with the existing SQLite database.
   - *Check*: Verified by running `python3 restore_fixture.py --replace`, executing re-imports, and confirming all expected records matched `expected-records.json`.
