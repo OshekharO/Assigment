@@ -1,224 +1,225 @@
-// TaskFlow — script.js
-// Mobile menu, scroll reveals, tagline reveal, form validation.
-// Motion per landing-page-design B7: cubic-bezier(0.22,1,0.36,1), transform/opacity only,
-// prefers-reduced-motion respected. No unthrottled scroll listeners.
-
 (function () {
   "use strict";
 
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var baseCurve = "cubic-bezier(0.22, 1, 0.36, 1)";
 
-  // --- Mobile menu ---
-  var menuButton = document.getElementById("menu-button");
-  var closeButton = document.getElementById("close-menu-button");
-  var mobileMenu = document.getElementById("mobile-menu");
-  var mobileLinks = mobileMenu.querySelectorAll("a");
-
-  function toggleMenu() {
-    var expanded = menuButton.getAttribute("aria-expanded") === "true";
-    menuButton.setAttribute("aria-expanded", String(!expanded));
-    mobileMenu.classList.toggle("open");
+  // Close Bootstrap navbar after selecting a link on mobile
+  var navCollapse = document.getElementById("mainNav");
+  if (navCollapse && window.bootstrap) {
+    navCollapse.querySelectorAll(".nav-link, .btn").forEach(function (link) {
+      link.addEventListener("click", function () {
+        if (window.innerWidth < 992 && navCollapse.classList.contains("show")) {
+          var instance = bootstrap.Collapse.getOrCreateInstance(navCollapse, { toggle: false });
+          instance.hide();
+        }
+      });
+    });
   }
 
-  menuButton.addEventListener("click", toggleMenu);
-
-  closeButton.addEventListener("click", function () {
-    menuButton.setAttribute("aria-expanded", "false");
-    mobileMenu.classList.remove("open");
-  });
-
-  mobileLinks.forEach(function (link) {
-    link.addEventListener("click", function () {
-      menuButton.setAttribute("aria-expanded", "false");
-      mobileMenu.classList.remove("open");
-    });
-  });
-
-  // --- Smooth scroll for nav links ---
+  // Smooth scroll for in-page anchors with header offset
   document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
     anchor.addEventListener("click", function (event) {
-      var target = document.querySelector(this.getAttribute("href"));
-      if (target) {
-        event.preventDefault();
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      var href = anchor.getAttribute("href");
+      if (!href || href === "#") {
+        return;
       }
+      var target = document.querySelector(href);
+      if (!target) {
+        return;
+      }
+      event.preventDefault();
+      var header = document.querySelector("header.sticky-top");
+      var offset = header ? header.offsetHeight : 0;
+      var top = target.getBoundingClientRect().top + window.pageYOffset - offset - 8;
+      window.scrollTo({ top: top, behavior: prefersReduced ? "auto" : "smooth" });
     });
   });
 
-  // --- Scroll reveal (B7): sections rise 32px and fade in once ---
-  var revealElements = document.querySelectorAll(
-    ".benefit, .step, .plan, .tagline-reveal"
-  );
-
-  var revealObserver = new IntersectionObserver(
-    function (entries) {
+  // Scroll reveal
+  var revealElements = document.querySelectorAll(".reveal-target");
+  if (prefersReduced) {
+    revealElements.forEach(function (el) {
+      el.classList.add("revealed");
+    });
+  } else if ("IntersectionObserver" in window) {
+    var revealObserver = new IntersectionObserver(function (entries, observer) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
           entry.target.classList.add("revealed");
-          revealObserver.unobserve(entry.target);
+          observer.unobserve(entry.target);
         }
       });
-    },
-    { threshold: 0.1 }
-  );
+    }, { threshold: 0.15 });
 
-  revealElements.forEach(function (el) {
-    if (prefersReduced) {
+    revealElements.forEach(function (el) {
+      revealObserver.observe(el);
+    });
+  } else {
+    revealElements.forEach(function (el) {
       el.classList.add("revealed");
-    } else {
-      var rect = el.getBoundingClientRect();
-      var alreadyVisible =
-        rect.top < window.innerHeight && rect.bottom > 0;
-      if (alreadyVisible) {
-        el.classList.add("revealed");
-      } else {
-        revealObserver.observe(el);
-      }
-    }
-  });
-
-  // --- Tagline reveal (B11): words activate one at a time on scroll ---
-  var taglineWords = document.querySelectorAll(".tagline-word");
-  var taglineSection = document.getElementById("tagline");
-
-  if (taglineWords.length > 0 && taglineSection) {
-    if (prefersReduced) {
-      taglineWords.forEach(function (word) {
-        word.classList.add("visible");
-      });
-    } else {
-      var taglineRect = taglineSection.getBoundingClientRect();
-      var taglineAlreadyVisible =
-        taglineRect.top < window.innerHeight && taglineRect.bottom > 0;
-
-      if (taglineAlreadyVisible) {
-        taglineWords.forEach(function (word, index) {
-          setTimeout(function () {
-            word.classList.add("visible");
-          }, index * 120);
-        });
-      } else {
-        var taglineObserver = new IntersectionObserver(
-          function (entries) {
-            entries.forEach(function (entry) {
-              if (entry.isIntersecting) {
-                taglineWords.forEach(function (word, index) {
-                  setTimeout(function () {
-                    word.classList.add("visible");
-                  }, index * 120);
-                });
-                taglineObserver.unobserve(entry.target);
-              }
-            });
-          },
-          { threshold: 0.15 }
-        );
-        taglineObserver.observe(taglineSection);
-      }
-    }
+    });
   }
-          });
-        },
-        { threshold: 0.15 }
-      );
+
+  // Tagline word reveal
+  var taglineSection = document.getElementById("tagline");
+  var taglineWords = document.querySelectorAll(".tagline-word");
+
+  function revealTaglineWords() {
+    taglineWords.forEach(function (word, index) {
+      if (prefersReduced) {
+        word.classList.add("visible");
+      } else {
+        setTimeout(function () {
+          word.classList.add("visible");
+        }, index * 180);
+      }
+    });
+  }
+
+  if (taglineSection && taglineWords.length) {
+    if (prefersReduced || !("IntersectionObserver" in window)) {
+      revealTaglineWords();
+    } else {
+      var taglineObserver = new IntersectionObserver(function (entries, observer) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            revealTaglineWords();
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.4 });
       taglineObserver.observe(taglineSection);
     }
   }
 
-  // --- Form validation and submission ---
-  var demoForm = document.getElementById("demo-form");
+  // Demo form validation and simulated submit
+  var form = document.getElementById("demo-form");
   var submitButton = document.getElementById("submit-button");
   var formStatus = document.getElementById("form-status");
   var formSuccess = document.getElementById("form-success");
   var resetButton = document.getElementById("reset-form");
 
-  var fields = ["name", "email", "company-size", "message"];
+  if (!form) {
+    return;
+  }
 
-  fields.forEach(function (fieldId) {
+  var fields = [
+    { id: "name", message: "Please enter your full name." },
+    { id: "email", message: "Please enter a valid work email address." },
+    { id: "company-size", message: "Please select a company size." },
+    { id: "message", message: "Please enter a message." }
+  ];
+
+  function isValidEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  function setFieldError(fieldId, message) {
     var input = document.getElementById(fieldId);
-    input.addEventListener("input", function () {
-      clearError(fieldId);
-      formStatus.textContent = "";
-    });
+    var errorEl = document.getElementById(fieldId + "-error");
+    if (!input || !errorEl) {
+      return;
+    }
+    input.classList.add("is-invalid");
+    input.classList.remove("is-valid");
+    errorEl.textContent = message;
+  }
+
+  function clearFieldError(fieldId) {
+    var input = document.getElementById(fieldId);
+    var errorEl = document.getElementById(fieldId + "-error");
+    if (!input || !errorEl) {
+      return;
+    }
+    input.classList.remove("is-invalid");
+    errorEl.textContent = "";
+  }
+
+  fields.forEach(function (field) {
+    var input = document.getElementById(field.id);
+    if (input) {
+      input.addEventListener("input", function () {
+        clearFieldError(field.id);
+        if (formStatus) {
+          formStatus.textContent = "";
+        }
+      });
+      input.addEventListener("change", function () {
+        clearFieldError(field.id);
+      });
+    }
   });
 
-  demoForm.addEventListener("submit", function (event) {
+  form.addEventListener("submit", function (event) {
     event.preventDefault();
 
     var hasError = false;
-
-    var name = document.getElementById("name").value.trim();
-    if (name === "") {
-      showError("name", "Please enter your full name.");
-      hasError = true;
-    }
-
-    var email = document.getElementById("email").value.trim();
-    if (email === "") {
-      showError("email", "Please enter your work email.");
-      hasError = true;
-    } else if (!isValidEmail(email)) {
-      showError("email", "Please enter a valid email address.");
-      hasError = true;
-    }
-
-    var companySize = document.getElementById("company-size").value;
-    if (companySize === "") {
-      showError("company-size", "Please select a company size.");
-      hasError = true;
-    }
-
-    var message = document.getElementById("message").value.trim();
-    if (message === "") {
-      showError("message", "Please enter a message.");
-      hasError = true;
-    }
+    fields.forEach(function (field) {
+      clearFieldError(field.id);
+      var input = document.getElementById(field.id);
+      var value = input ? String(input.value || "").trim() : "";
+      if (!value) {
+        setFieldError(field.id, field.message);
+        hasError = true;
+      } else if (field.id === "email" && !isValidEmail(value)) {
+        setFieldError(field.id, field.message);
+        hasError = true;
+      } else if (input) {
+        input.classList.add("is-valid");
+      }
+    });
 
     if (hasError) {
+      var firstInvalid = form.querySelector(".is-invalid");
+      if (firstInvalid) {
+        firstInvalid.focus();
+      }
       return;
     }
 
-    // Loading state (B9)
     submitButton.disabled = true;
-    submitButton.textContent = "Requesting demo";
-    formStatus.textContent = "";
-    formSuccess.hidden = true;
+    submitButton.textContent = "Requesting demo...";
+    if (formStatus) {
+      formStatus.textContent = "";
+    }
+    if (formSuccess) {
+      formSuccess.hidden = true;
+    }
 
     setTimeout(function () {
       submitButton.disabled = false;
       submitButton.textContent = "Request demo";
-      demoForm.reset();
-      formSuccess.hidden = false;
-      formSuccess.focus();
+      form.reset();
+      fields.forEach(function (field) {
+        var input = document.getElementById(field.id);
+        if (input) {
+          input.classList.remove("is-valid", "is-invalid");
+        }
+      });
+      if (formSuccess) {
+        formSuccess.hidden = false;
+        formSuccess.focus();
+      }
     }, 1200);
   });
 
-  resetButton.addEventListener("click", function () {
-    formSuccess.hidden = true;
-    demoForm.reset();
-    formStatus.textContent = "";
-  });
-
-  function showError(fieldId, message) {
-    var input = document.getElementById(fieldId);
-    var errorEl = document.getElementById(fieldId + "-error");
-    if (errorEl) {
-      errorEl.textContent = message;
-    }
-    if (input) {
-      input.focus();
-    }
-  }
-
-  function clearError(fieldId) {
-    var errorEl = document.getElementById(fieldId + "-error");
-    if (errorEl) {
-      errorEl.textContent = "";
-    }
-  }
-
-  function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (resetButton) {
+    resetButton.addEventListener("click", function () {
+      if (formSuccess) {
+        formSuccess.hidden = true;
+      }
+      form.reset();
+      fields.forEach(function (field) {
+        var input = document.getElementById(field.id);
+        if (input) {
+          input.classList.remove("is-valid", "is-invalid");
+        }
+        clearFieldError(field.id);
+      });
+      var nameInput = document.getElementById("name");
+      if (nameInput) {
+        nameInput.focus();
+      }
+    });
   }
 })();

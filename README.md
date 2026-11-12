@@ -1,57 +1,43 @@
 # TaskFlow
 
-TaskFlow is a premium SaaS project management platform landing page.
+TaskFlow is a responsive SaaS project management landing page rebuilt with [Bootstrap 5.3.3](https://getbootstrap.com/).
 
-## Project description
+## Overview
 
-A responsive, accessible marketing website for TaskFlow, a project management tool that helps teams plan work, assign tasks, set deadlines, and track progress on a visual board. The site includes:
+The page presents TaskFlow as a tool for planning work, assigning tasks, setting deadlines, and tracking progress on a visual board. It includes:
 
-- Hero section with a custom Kanban board preview built in HTML and CSS
-- Three benefit presentations with varied layouts
-- Three-step workflow ("How it works")
-- Mandatory tagline reveal section with word-by-word scroll animation
-- Two illustrative pricing plans (Free and Team)
-- Validated demo request form with loading feedback and simulated success state
-- Responsive navigation with a working mobile menu
-- Professional footer with legal links
+- Responsive Bootstrap navbar with collapse behavior on mobile and a single "Request demo" call-to-action
+- Hero section with product copy and a custom Kanban board preview
+- Feature, workflow, about, values, tagline, and pricing sections
+- Demo request form with client-side validation, loading state, and simulated success feedback
+- Scroll reveal effects and tagline animation that respect `prefers-reduced-motion`
 
-Built with semantic HTML, vanilla CSS, and vanilla JavaScript. No frameworks or dependencies.
+## Tech stack
 
-## Visual design direction
-
-- **Premium, editorial composition:** strong typography, generous intentional whitespace, varied section layouts
-- **Typography:** single typeface (Geist stack), sentence case, no italics, no ultra-bold weights, Tailwind type scale
-- **Color:** restrained palette with one saturated violet accent (#6D28D9), flat backgrounds (no gradients except hero heading text per design system)
-- **Motion:** weighted cubic-bezier ease, transform/opacity only, scroll reveals, tagline word-by-word reveal, respects prefers-reduced-motion
-- **Accessibility:** WCAG AA contrast, visible focus indicators, keyboard navigation, skip-to-content link, labeled form fields, ARIA attributes
+- HTML5
+- Bootstrap 5.3.3 via CDN (CSS and JS bundle)
+- Custom CSS (`styles.css`) for brand styling, board preview, and motion
+- Vanilla JavaScript (`script.js`) for smooth scrolling, reveals, navbar behavior, and form handling
 
 ## Running locally
 
-There is no build step. Open `index.html` directly in a web browser:
+No build step is required.
 
 ```powershell
-# From the project directory
-Start-Process index.html
+Start-Process .\index.html
 ```
 
-Or double-click `index.html` in File Explorer.
-
-No server is required because the site uses only static HTML, CSS, and JavaScript.
+You can also open `index.html` directly in a browser.
 
 ## Files
 
-- `index.html` - Semantic HTML structure
-- `styles.css` - Responsive styles following the landing-page-design visual system
-- `script.js` - Mobile menu, scroll reveals, tagline reveal, form validation
-- `README.md` - This file
+- `index.html` - Page structure and Bootstrap layout/components
+- `styles.css` - Custom theme overrides and component styling
+- `script.js` - Interaction, animation, and form validation logic
+- `README.md` - Project notes
 
-## Design choices
+## Notes
 
-- Single typeface (system-ui stack) with system fallbacks; no Inter/Roboto/Arial/Open Sans/Helvetica/Geist per design system
-- One accent color (violet #6D28D9) used as a committed field, not scattered accents
-- No em dashes, no hyphens in copy, no orphaned words (text-wrap balance/pretty)
-- Every font size lands on the Tailwind type scale; every spacing value from the B2 spacing table
-- No background gradients except the hero heading text gradient (#000000 → #666666)
-- Custom Kanban board preview authored in HTML/CSS, no stock illustrations or screenshots
-- Form validation with inline errors, loading state, and honest simulated success message
-- All links point to real sections on the page, no dead links
+- The demo form submission is simulated; no data is sent to a server.
+- Pricing and content are illustrative.
+- All navigation links point to sections within the page.
